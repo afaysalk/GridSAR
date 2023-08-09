@@ -6,7 +6,6 @@
 *.json
 *.kml
 takeout-*.zip
-*.gpx
 !package.json
 # generated files
 *.html
