@@ -96,3 +96,55 @@ def get_geojson_grid(upper_right, lower_left, n):
 
 
 
+# Used a def so that if you wish to add interactivity you can do that easily later on.
+def gridder(min_hour,max_hour,n,m):
+
+        # Add a column with ones, then calculate sum and generate the heat
+        sliceDF = pd.read_csv("new.csv")
+        sliceDF.dropna(subset=["Latitude", "Longitude"], inplace=True)
+        
+    
+        #boundaries of the main rectangle
+        upper_right = [52.665317, -1.684482]
+        lower_left = [52.379884, -2.184111]
+        
+        # Creating a grid of nxn from the given cordinate corners     
+        grid = get_geojson_grid(upper_right, lower_left , n)
+        # Holds number of points that fall in each cell & time window if provided
+        counts_array = []
+        
+        # Adding the total number of visits to each cell
+        for box in grid:
+            # get the corners for each cell
+            print(box["properties"]["upper_right"])
+            upper_right = box["properties"]["upper_right"]
+            lower_left = box["properties"]["lower_left"]
+            print(box["properties"]["upper_right"])
+        # check to make sure it's in the box and between the time window if time window is given 
+            mask = ((sliceDF.Latitude <= upper_right[1]) & (sliceDF.Latitude >= lower_left[1]) &
+                (sliceDF.Longitude <= upper_right[0]) & (sliceDF.Longitude >= lower_left[0]) )
+        # Number of points that fall in the cell and meet the condition 
+            counts_array.append(len(sliceDF[mask]))
+            
+        # creating a base map 
+        # Add GeoJson to map
+        for i, geo_json in enumerate(grid):
+                relativeCount = counts_array[i]*1000
+                color = plt.cm.YlGn(relativeCount)
+                color = plt.colors.to_hex(color)
+                gj = folium.GeoJson(geo_json,
+                        style_function=lambda feature, color=color: {
+                            'fillColor': color,
+                            'color':"gray",
+                            'weight': 0.5,
+                            'dashArray': '6,6',
+                            'fillOpacity': 0.8,
+                        })
+                   
+                m.add_child(gj)
+            
+        colormap = branca.colormap.linear.YlGn_09.scale(0, 1)
+        colormap = colormap.to_step(index=[0, 0.3, 0.6, 0.8 , 1])
+        colormap.caption = 'Relative density of fleet activity per cell'
+        colormap.add_to(m)
+        return m
