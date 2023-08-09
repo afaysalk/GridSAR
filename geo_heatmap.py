@@ -148,7 +148,7 @@ def gridder(min_hour,max_hour,n,m):
         colormap.caption = 'Relative density of fleet activity per cell'
         colormap.add_to(m)
         return m
-
+ 
 class Generator:
     def __init__(self):
         self.coordinates = collections.defaultdict(int)
@@ -316,3 +316,59 @@ class Generator:
         for name, stat in self.stats.items():
             print("{}: {}".format(name, stat))
         print()
+
+if __name__ == "__main__":
+    parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
+    parser.add_argument(
+        "files", metavar="file", type=str, nargs="+", help="Any of the following files:\n"
+        "- Your location history JSON file from Google Takeout\n"
+        "- Your location history KML file from Google Takeout\n"
+        "- The takeout-*.zip raw download from Google Takeout \nthat contains either of the above files\n"
+        "- A GPX file containing GPS tracks")
+    parser.add_argument("-o", "--output", dest="output", type=str, required=False,
+                        help="Path of heatmap HTML output file.", default="heatmap.html")
+    parser.add_argument("--min-date", dest="min_date", metavar="YYYY-MM-DD", type=str, required=False,
+                        help="The earliest date from which you want to see data in the heatmap.")
+    parser.add_argument("--max-date", dest="max_date", metavar="YYYY-MM-DD", type=str, required=False,
+                        help="The latest date from which you want to see data in the heatmap.")
+    parser.add_argument("-s", "--stream", dest="stream", action="store_true", help="Option to iteratively load data.")
+    parser.add_argument("--map", "-m", dest="map", metavar="MAP", type=str, required=False, default="OpenStreetMap",
+                        help="The name of the map tiles you want to use.\n" \
+                        "(e.g. 'OpenStreetMap', 'StamenTerrain', 'StamenToner', 'StamenWatercolor')")
+    parser.add_argument("-z", "--zoom-start", dest="zoom_start", type=int, required=False,
+                        help="The initial zoom level for the map. (default: %(default)s)", default=6)
+    parser.add_argument("-r", "--radius", type=int, required=False,
+                        help="The radius of each location point. (default: %(default)s)", default=7)
+    parser.add_argument("-b", "--blur", type=int, required=False,
+                        help="The amount of blur. (default: %(default)s)", default=4)
+    parser.add_argument("-mo", "--min-opacity", dest="min_opacity", type=float, required=False,
+                        help="The minimum opacity of the heatmap. (default: %(default)s)", default=0.2)
+    parser.add_argument("-mz", "--max-zoom", dest="max_zoom", type=int, required=False,
+                        help="The maximum zoom of the heatmap. (default: %(default)s)", default=4)
+
+
+    args = parser.parse_args()
+    data_file = args.files
+    output_file = args.output
+    date_range = args.min_date, args.max_date
+    stream_data = args.stream
+    settings = {
+        "tiles": args.map,
+        "zoom_start": args.zoom_start,
+        "radius": args.radius,
+        "blur": args.blur,
+        "min_opacity": args.min_opacity,
+        "max_zoom": args.max_zoom
+    }
+
+    generator = Generator()
+    generator.run(data_file, output_file, date_range, stream_data, settings)
+    # Check if browser is text-based
+    if not isTextBasedBrowser(webbrowser.get()):
+        try:
+            print("[info] Opening {} in browser".format(output_file))
+            webbrowser.open("file://" + os.path.realpath(output_file))
+        except webbrowser.Error:
+            print("[info] No runnable browser found. Open {} manually.".format(
+                output_file))
+            print("[info] Path to heatmap file: \"{}\"".format(os.path.abspath(output_file)))
