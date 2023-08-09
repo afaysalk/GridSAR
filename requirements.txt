@@ -1,0 +1,11 @@
+beautifulsoup4
+folium
+progressbar2
+ijson
+progressbar
+pandas
+numpy
+matplotlib
+scipy
+geojson
+branca
