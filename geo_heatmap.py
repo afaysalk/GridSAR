@@ -100,7 +100,7 @@ def get_geojson_grid(upper_right, lower_left, n):
 def gridder(min_hour,max_hour,n,m):
 
         # Add a column with ones, then calculate sum and generate the heat
-        sliceDF = pd.read_csv("new.csv")
+        sliceDF = pd.read_csv("data.csv")
         sliceDF.dropna(subset=["Latitude", "Longitude"], inplace=True)
         
     
@@ -129,7 +129,7 @@ def gridder(min_hour,max_hour,n,m):
         # creating a base map 
         # Add GeoJson to map
         for i, geo_json in enumerate(grid):
-                relativeCount = counts_array[i]*1000
+                relativeCount = counts_array[i]*100
                 color = plt.cm.YlGn(relativeCount)
                 color = plt.colors.to_hex(color)
                 gj = folium.GeoJson(geo_json,
